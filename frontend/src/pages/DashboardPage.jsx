@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import DailyLogForm from "../components/DailyLogForm";
 import API from "../services/api";
 import ProgressStats from "../components/ProgressStats";
-
+import AIChatWidget from "../components/AIChatWidget";
 
 function DashboardPage() {
 
@@ -109,7 +109,7 @@ function DashboardPage() {
       <hr />
 
       <ProgressStats />
-
+      <AIChatWidget/>
     </div>
 
   );
