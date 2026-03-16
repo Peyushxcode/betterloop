@@ -1,6 +1,9 @@
 const express = require("express");
 const DailyLog = require("../models/DailyLog");
 const authMiddleware = require("../middleware/authMiddleware");
+const predictRisk = require("../services/riskPredictor");
+const extractFeatures = require("../services/featureExtractor");
+const UserRisk = require("../models/UserRisk");
 
 const router = express.Router();
 
@@ -10,7 +13,16 @@ router.post("/create", authMiddleware, async (req, res) => {
 
   try {
 
-    const { status, trigger, notes } = req.body;
+    const {
+      status,
+      trigger,
+      notes,
+      triggerType,
+      urgeLevel,
+      mood,
+      completedPlan,
+      logTime
+    } = req.body;
 
     const userId = req.user.id;
 
@@ -32,9 +44,31 @@ router.post("/create", authMiddleware, async (req, res) => {
       date: today,
       status,
       trigger,
-      notes
+      notes,
+
+      // new ML fields
+      triggerType,
+      urgeLevel,
+      mood,
+      completedPlan,
+      logTime
     });
 
+    const features = await extractFeatures(userId);
+
+    // Predict relapse risk
+    const prediction = await predictRisk(features);
+
+    // Save risk result
+    await UserRisk.findOneAndUpdate(
+      { userId },
+      {
+        riskScore: prediction.riskScore,
+        riskLevel: prediction.riskLevel
+      },
+      { upsert: true, new: true }
+    );
+    
     res.json(log);
 
   } catch (error) {
@@ -71,7 +105,7 @@ router.get("/today", authMiddleware, async (req, res) => {
 
 });
 
-router.get("/:userId",authMiddleware, async (req, res) => {
+router.get("/:userId", authMiddleware, async (req, res) => {
 
   try {
 
@@ -87,6 +121,44 @@ router.get("/:userId",authMiddleware, async (req, res) => {
 
 });
 
+//testing 
 
 
+router.get("/features/test", authMiddleware, async (req, res) => {
+
+  try {
+
+    const features = await extractFeatures(req.user.id);
+
+    res.json(features);
+
+  } catch (error) {
+
+    res.status(500).json({ error: error.message });
+
+  }
+
+});
+
+
+router.get("/risk/test", authMiddleware, async (req, res) => {
+
+  try {
+
+    const features = await extractFeatures(req.user.id);
+
+    const prediction = await predictRisk(features);
+
+    res.json({
+      features,
+      prediction
+    });
+
+  } catch (error) {
+
+    res.status(500).json({ error: error.message });
+
+  }
+
+});
 module.exports = router;

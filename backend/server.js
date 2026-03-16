@@ -10,7 +10,7 @@ const planRoutes = require("./routes/planRoutes");
 const logRoutes = require("./routes/logRoutes");
 const statsRoutes = require("./routes/statsRoutes");
 const chatRoutes = require("./routes/chatRoutes");
-
+const riskRoutes = require("./routes/riskRoutes");
 
 const app = express();
 
@@ -26,6 +26,7 @@ app.use("/api/plan", planRoutes);
 app.use("/api/logs", logRoutes);
 app.use("/api/stats", statsRoutes);
 app.use("/api/chat", chatRoutes);
+app.use("/api/risk", riskRoutes);
 
 // test route
 app.get("/", (req, res) => {
