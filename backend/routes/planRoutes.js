@@ -7,7 +7,7 @@ const router = express.Router();
 
 
 // GENERATE PLAN
-router.post("/generate/:userId",authMiddleware, async (req, res) => {
+router.post("/generate/:userId", authMiddleware, async (req, res) => {
 
   try {
 
@@ -71,7 +71,7 @@ router.post("/generate/:userId",authMiddleware, async (req, res) => {
 
 
 // GET USER PLAN
-router.get("/:userId",authMiddleware, async (req, res) => {
+router.get("/:userId", authMiddleware, async (req, res) => {
 
   try {
 
@@ -83,6 +83,73 @@ router.get("/:userId",authMiddleware, async (req, res) => {
 
   } catch (error) {
     res.status(500).json({ error: error.message });
+  }
+
+});
+
+// UPDATE DAY COMPLETION
+router.patch("/day/:dayNumber", authMiddleware, async (req, res) => {
+
+  try {
+
+    const dayNumber = parseInt(req.params.dayNumber);
+
+    const plan = await RecoveryPlan.findOne({
+      userId: req.user.id
+    });
+
+    if (!plan) {
+      return res.status(404).json({ message: "Plan not found" });
+    }
+
+    const today = new Date().toISOString().split("T")[0];
+
+    // check if user already completed a day today
+    const alreadyCompletedToday = plan.days.find(
+      d => d.completedAt === today
+    );
+
+    if (alreadyCompletedToday) {
+      return res.status(400).json({
+        message: "You can only complete one plan day per real day"
+      });
+    }
+
+    const day = plan.days.find(d => d.day === dayNumber);
+
+    if (!day) {
+      return res.status(404).json({ message: "Day not found" });
+    }
+
+    if (day.completed === true) {
+      return res.status(400).json({
+        message: "This day has already been marked completed"
+      });
+    }
+
+    // sequential rule
+    const nextIncompleteDay = plan.days.find(d => d.completed === false);
+
+    if (!nextIncompleteDay || nextIncompleteDay.day !== dayNumber) {
+      return res.status(400).json({
+        message: "You must complete days sequentially"
+      });
+    }
+
+    day.completed = true;
+    day.completedAt = today;
+
+    await plan.save();
+
+    res.json({
+      message: "Day marked as completed",
+      plan
+    });
+
+  } catch (error) {
+
+    res.status(500).json({ error: error.message });
+
   }
 
 });

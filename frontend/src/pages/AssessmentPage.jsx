@@ -11,6 +11,7 @@ function AssessmentPage() {
   const [duration, setDuration] = useState("");
   const [goal, setGoal] = useState("");
   const [triggers, setTriggers] = useState("");
+  const [planDuration, setPlanDuration] = useState(30);
 
   const handleSubmit = async (e) => {
 
@@ -74,6 +75,18 @@ function AssessmentPage() {
           onChange={(e)=>setTriggers(e.target.value)}
         />
 
+        <h3>Recovery Plan Duration</h3>
+
+        <select
+          value={planDuration}
+          onChange={(e) => setPlanDuration(Number(e.target.value))}
+        >
+
+          <option value={30}>30 Days</option>
+          <option value={45}>45 Days</option>
+          <option value={60}>60 Days</option>
+
+        </select>
         <br/><br/>
 
         <input

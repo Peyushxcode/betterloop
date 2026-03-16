@@ -8,6 +8,49 @@ const router = express.Router();
 
 
 // SAVE ASSESSMENT
+// router.post("/create", authMiddleware, async (req, res) => {
+
+//   try {
+
+//     const profile = await AddictionProfile.create({
+//       userId: req.user.id,
+//       ...req.body
+//     });
+
+//     const existingPlan = await RecoveryPlan.findOne({
+//       userId: req.user.id
+//     });
+
+//     if (existingPlan) {
+//       return res.json({
+//         profile,
+//         plan: existingPlan
+//       });
+//     }
+    
+//     const aiPlan = await generatePlan(profile);
+
+//     const savedPlan = await RecoveryPlan.create({
+//       userId: req.user.id,
+//       addictionType: profile.addictionType,
+//       planSteps: aiPlan.planSteps,
+//       goodHabit: aiPlan.goodHabit,
+//       motivation: aiPlan.motivation
+//     });
+
+//     res.json({
+//       profile,
+//       plan: savedPlan
+//     });
+
+//   } catch (error) {
+
+//     res.status(500).json({ error: error.message });
+
+//   }
+
+// });
+
 router.post("/create", authMiddleware, async (req, res) => {
 
   try {
@@ -27,17 +70,21 @@ router.post("/create", authMiddleware, async (req, res) => {
         plan: existingPlan
       });
     }
-    
+
     const aiPlan = await generatePlan(profile);
 
     const savedPlan = await RecoveryPlan.create({
       userId: req.user.id,
       addictionType: profile.addictionType,
-      planSteps: aiPlan.planSteps,
+      duration: profile.planDuration,
+      days: aiPlan.days,
       goodHabit: aiPlan.goodHabit,
-      motivation: aiPlan.motivation
-    });
+      motivation: aiPlan.motivation,
 
+      // backward compatibility
+      planSteps: aiPlan.planSteps
+    });
+    
     res.json({
       profile,
       plan: savedPlan

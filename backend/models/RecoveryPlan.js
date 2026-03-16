@@ -1,6 +1,30 @@
 const mongoose = require("mongoose");
 
+const DayPlanSchema = new mongoose.Schema({
+  day: {
+    type: Number,
+    required: true
+  },
+
+  tasks: {
+    type: [String],
+    required: true
+  },
+
+  completed: {
+    type: Boolean,
+    default: false
+  } ,
+
+  completedAt:{
+    type:String
+  }
+
+}, { _id: false });
+
+
 const RecoveryPlanSchema = new mongoose.Schema({
+
   userId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",
@@ -11,18 +35,21 @@ const RecoveryPlanSchema = new mongoose.Schema({
     type: String
   },
 
-  planSteps: {
-    type: [String],
-    default: []
+  duration: {
+    type: Number
   },
 
-  goodHabit: {
-    type: String
-  },
-  motivation: {
-    type: String
-  }
+  // NEW STRUCTURE
+  days: [DayPlanSchema],
+
+  // OLD STRUCTURE (kept for safety)
+  planSteps: [String],
+
+  goodHabit: String,
+
+  motivation: String
 
 }, { timestamps: true });
+
 
 module.exports = mongoose.model("RecoveryPlan", RecoveryPlanSchema);

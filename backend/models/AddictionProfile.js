@@ -26,6 +26,12 @@ const AddictionProfileSchema = new mongoose.Schema({
 
   goal: {
     type: String
+  },
+  
+  planDuration: {
+    type: Number,
+    enum: [30, 45, 60],
+    default: 30
   }
 
 }, { timestamps: true });

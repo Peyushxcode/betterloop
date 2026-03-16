@@ -1,5 +1,4 @@
 const Groq = require("groq-sdk");
-const RecoveryPlan = require("../models/RecoveryPlan");
 
 const groq = new Groq({
   apiKey: process.env.GROQ_API_KEY
@@ -7,25 +6,43 @@ const groq = new Groq({
 
 const generatePlan = async (profile) => {
 
+  const duration = profile.planDuration || 30;
+
   const prompt = `
 You are an addiction recovery expert.
 
-Create a simple recovery plan for the following user:
+Create a structured recovery plan.
 
+User information:
 Addiction: ${profile.addictionType}
 Frequency: ${profile.frequency}
-Duration: ${profile.duration}
+Duration of addiction: ${profile.duration}
 Triggers: ${profile.triggers.join(", ")}
 Goal: ${profile.goal}
 
+The recovery program should last ${duration} days.
+
+Rules:
+- Each day must have AT MOST 3 tasks.
+- Tasks must help the user reduce or quit the addiction.
+- Tasks should be practical and small.
+- Tasks should evolve gradually across days.
+
 Return ONLY valid JSON.
-Do not include markdown formatting.
-Return the response in JSON format:
+Do NOT include markdown or explanations.
+
+Return JSON in this format:
 
 {
- "planSteps": ["step1","step2","step3"],
- "goodHabit": "habit",
- "motivation": "short motivational line"
+ "days":[
+   {
+     "day":1,
+     "tasks":["task1","task2","task3"]
+   }
+ ],
+ "planSteps":["general step1","general step2","general step3"],
+ "goodHabit":"habit to replace addiction",
+ "motivation":"short motivational line"
 }
 `;
 
@@ -33,7 +50,7 @@ Return the response in JSON format:
     messages: [
       {
         role: "system",
-        content: "You are an addiction recovery assistant."
+        content: "You are a professional addiction recovery coach."
       },
       {
         role: "user",
@@ -48,12 +65,20 @@ Return the response in JSON format:
 
   let cleanText = text.trim();
 
-    // remove markdown code blocks if present
-    if (cleanText.startsWith("```")) {
+  // remove markdown if AI accidentally adds it
+  if (cleanText.startsWith("```")) {
     cleanText = cleanText.replace(/```json|```/g, "").trim();
-    }
+  }
 
-    const parsed = JSON.parse(cleanText);
+  const parsed = JSON.parse(cleanText);
+
+  // ensure completed flag exists
+  if (parsed.days) {
+    parsed.days = parsed.days.map(day => ({
+      ...day,
+      completed: false
+    }));
+  }
 
   return parsed;
 };
